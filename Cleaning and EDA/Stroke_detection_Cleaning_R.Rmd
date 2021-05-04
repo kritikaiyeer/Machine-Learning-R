@@ -1,0 +1,161 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+install.packages("tidyverse")
+install.packages("naniar")
+install.packages("skimr")
+install.packages("caret")
+install.packages("MLmetrics")
+install.packages("imbalance")
+install.packages("gridExtra")
+install.packages("patchwork")
+
+
+```
+
+
+```{r}
+install.packages("funModeling")
+
+```
+
+```{r}
+# load libraries
+library(tidyverse) 
+library(naniar) 
+library(skimr) 
+library(caret) 
+library(MLmetrics) 
+library(imbalance) 
+library(gridExtra) 
+library(patchwork) 
+
+# set a seed for reproducible results
+set.seed(88)
+
+# custom plot size function
+fig <- function(width, heigth){
+     options(repr.plot.width = width, repr.plot.height = heigth)
+}
+
+## ggplot custom theme
+theme_bigfont <- theme(plot.title = element_text(size=12),
+                       axis.text.x= element_text(size=9),
+                       axis.text.y= element_text(size=9), 
+                       axis.title=element_text(size=14),
+                       legend.text = element_text(size = 12))
+```
+
+
+```{r}
+# read data into R
+stroke_data <- read_csv("healthcare-dataset-stroke-data.csv")
+```
+
+```{r}
+# summary of the data
+summary(stroke_data)
+
+# Data Cleaning and Handling Missing Values
+
+# check unique values
+cat("Gender:")
+unique(stroke_data$gender)
+cat("Married:")
+unique(stroke_data$ever_married)
+cat("Work type:")
+unique(stroke_data$work_type)
+cat("Residence type:")
+unique(stroke_data$Residence_type)
+cat("Smoking:")
+unique(stroke_data$smoking_status)
+```
+
+```{r}
+# check NA values in the dataset
+miss_scan_count(data = stroke_data, search = list("N/A", "Unknown"))
+```
+```{r}
+# Fill wrong smoking_status values and bmi values with NA 
+# replace the "N/A" in bmi
+stroke_data_clean <- replace_with_na(data = stroke_data, replace = list(bmi = c("N/A"), smoking_status = c("Unknown"))) %>%
+    # change bmi to numeric 
+    mutate(bmi = as.numeric(bmi))
+
+# check
+unique(stroke_data_clean$smoking_status)
+
+```
+
+
+```{r}
+stroke_data_clean$hypertension = as.factor(stroke_data_clean$hypertension)
+stroke_data_clean$heart_disease = as.factor(stroke_data_clean$heart_disease)
+
+mean_bmi = mean(stroke_data_clean$bmi,na.rm = T)
+
+stroke_data_imp = stroke_data_clean %>%
+
+        mutate(bmi = ifelse(is.na(bmi),mean_bmi,bmi))
+
+```
+
+
+```{r}
+stroke_data_imp <- stroke_data_imp %>%
+mutate(bmi = case_when(bmi < 18.5 ~ "underweight",
+                      bmi >= 18.5 & bmi < 25 ~ "normal weight",
+                      bmi >= 25 & bmi < 30 ~ "overweight",
+                      bmi >= 30 ~ "obese"),
+      bmi = factor(bmi, levels = c("underweight", "normal weight", "overweight", "obese"), order = TRUE))
+```
+```{r}
+head(stroke_data_imp)
+```
+
+```{r}
+# mode imputation for smoking_status and use as.factor to binary code the categorical variable
+stroke_data_imp2 <- stroke_data_imp %>%
+fill(smoking_status) %>%
+mutate(across(c(hypertension, heart_disease), factor),
+      across(where(is.character), as.factor),
+      across(where(is.factor), as.numeric),
+      stroke = factor(ifelse(stroke == 0, "no", "yes")))
+head(stroke_data_imp2)
+
+```
+```{r}
+fig(16,8)
+
+p1 <- ggplot(stroke_data_imp, 
+       aes(x = smoking_status, fill = smoking_status)) + 
+geom_bar() +
+labs(title = "Before filling in NA values in smoking_status") +
+theme(legend.position = "none") +
+theme_bigfont
+after <- stroke_data_imp %>% 
+fill(smoking_status)
+p2 <- ggplot(after, 
+       aes(x = smoking_status, fill = smoking_status)) + 
+geom_bar() +
+labs(title = "After filling in NA values in smoking_status") +
+theme(legend.position = "none") +
+theme_bigfont
+
+p1 + p2
+```
+```{r}
+library(funModeling)
+freq(data=stroke_data_imp2, input = c('hypertension','hypertension'))
+
+```
+```{r}
+freq(data=stroke_data_imp2, input = c('stroke','stroke'))
+
+```
+
+

@@ -1,0 +1,72 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+plot(cars)
+```
+
+```{r}
+# Print the mtcars data set
+```
+
+
+```{r}
+mtcars
+``
+
+```{r}
+?mtcars
+```
+```{r}
+Data_Cars <- mtcars # create a variable of the mtcars data set for better organization
+
+# Use dim() to find the dimension of the data set
+dim(Data_Cars)
+
+# Use names() to find the names of the variables from the data set
+names(Data_Cars)
+```
+```{r}
+Data_Cars <- mtcars
+
+rownames(Data_Cars)
+```
+```{r}
+Data_Cars <- mtcars
+
+sort(Data_Cars$cyl)
+```
+```{r}
+Data_Cars <- mtcars
+
+summary(Data_Cars)
+```
+
+```{r}
+Data_Cars <- mtcars
+
+max(Data_Cars$hp)
+min(Data_Cars$hp)
+```
+
+```{r}
+Data_Cars <- mtcars
+
+mean(Data_Cars$wt)
+```
+
+```{r}
+Data_Cars <- mtcars
+
+median(Data_Cars$wt)
+```
+
+```{r}
+Data_Cars <- mtcars
+
+names(sort(-table(Data_Cars$wt)))[1]
+```
+
